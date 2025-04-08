@@ -7,6 +7,64 @@ const config: Config = {
   savePath: './artifacts',
 };
 
+// Sanitize filename to avoid invalid characters but preserve path separators
+export const sanitizeFileName = (fileName: string): string => {
+  // Don't replace path separators, but sanitize everything else
+  // Replace invalid characters with underscore
+  return fileName.replace(/[<>:"\\|?*]/g, '_');
+};
+
+// Get appropriate extension for code
+export const getCodeExtension = (language: string): string => {
+  const extensions: Record<string, string> = {
+    python: 'py',
+    javascript: 'js',
+    typescript: 'ts',
+    java: 'java',
+    c: 'c',
+    cpp: 'cpp',
+    csharp: 'cs',
+    go: 'go',
+    ruby: 'rb',
+    rust: 'rs',
+    php: 'php',
+    swift: 'swift',
+    kotlin: 'kt',
+    scala: 'scala',
+    shell: 'sh',
+    bash: 'sh',
+    powershell: 'ps1',
+    sql: 'sql',
+    html: 'html',
+    css: 'css',
+    json: 'json',
+    yaml: 'yaml',
+    xml: 'xml',
+  };
+
+  return extensions[language.toLowerCase()] || 'txt';
+};
+
+// Get appropriate file extension based on artifact type
+export const getExtensionForType = (type: string, language?: string): string => {
+  switch (type) {
+    case 'application/vnd.ant.code':
+      return getCodeExtension(language || 'txt');
+    case 'text/markdown':
+      return 'md';
+    case 'text/html':
+      return 'html';
+    case 'image/svg+xml':
+      return 'svg';
+    case 'application/vnd.ant.mermaid':
+      return 'mmd';
+    case 'application/vnd.ant.react':
+      return 'jsx';
+    default:
+      return 'txt';
+  }
+};
+
 // Function to update the save path configuration
 export const updateSavePath = async (newPath: string): Promise<void> => {
   // Resolve to absolute path
@@ -74,64 +132,6 @@ export const saveArtifactToFile = async (artifact: Artifact): Promise<string> =>
 
   return outputPath;
 };
-
-// Get appropriate file extension based on artifact type
-function getExtensionForType(type: string, language?: string): string {
-  switch (type) {
-    case 'application/vnd.ant.code':
-      return getCodeExtension(language || 'txt');
-    case 'text/markdown':
-      return 'md';
-    case 'text/html':
-      return 'html';
-    case 'image/svg+xml':
-      return 'svg';
-    case 'application/vnd.ant.mermaid':
-      return 'mmd';
-    case 'application/vnd.ant.react':
-      return 'jsx';
-    default:
-      return 'txt';
-  }
-}
-
-// Get appropriate extension for code
-function getCodeExtension(language: string): string {
-  const extensions: Record<string, string> = {
-    python: 'py',
-    javascript: 'js',
-    typescript: 'ts',
-    java: 'java',
-    c: 'c',
-    cpp: 'cpp',
-    csharp: 'cs',
-    go: 'go',
-    ruby: 'rb',
-    rust: 'rs',
-    php: 'php',
-    swift: 'swift',
-    kotlin: 'kt',
-    scala: 'scala',
-    shell: 'sh',
-    bash: 'sh',
-    powershell: 'ps1',
-    sql: 'sql',
-    html: 'html',
-    css: 'css',
-    json: 'json',
-    yaml: 'yaml',
-    xml: 'xml',
-  };
-
-  return extensions[language.toLowerCase()] || 'txt';
-}
-
-// Sanitize filename to avoid invalid characters but preserve path separators
-function sanitizeFileName(fileName: string): string {
-  // Don't replace path separators, but sanitize everything else
-  // Replace invalid characters with underscore
-  return fileName.replace(/[<>:"\\|?*]/g, '_');
-}
 
 // List all saved artifacts recursively
 export const listSavedArtifacts = async (): Promise<string[]> => {
