@@ -1,5 +1,5 @@
 {
-  "name": "mcp-artifact-saver",
+  "name": "claude-artifact-saver-mcp",
   "version": "1.0.0",
   "description": "MCP server for saving Claude chat artifacts to files",
   "main": "build/index.js",
