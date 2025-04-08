@@ -13,7 +13,7 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepare": "npx pre-commit install || true"
+    "prepare": "npx pre-commit install"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.9.0",
