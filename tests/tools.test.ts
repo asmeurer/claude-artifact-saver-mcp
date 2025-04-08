@@ -103,7 +103,9 @@ describe('MCP Tools', () => {
             content: [
               {
                 type: 'text',
-                text: `Successfully saved artifact "${artifact.title || artifact.id}" to ${filePath}`,
+                text: `Successfully saved artifact "${
+                  artifact.title || artifact.id
+                }" to ${filePath}`,
               },
             ],
           };
