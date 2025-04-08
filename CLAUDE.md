@@ -64,4 +64,3 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - TypeScript type checking
   - Security checks (detect private keys)
   - File integrity checks (YAML/JSON validity)
-  - Branch protection (no direct commits to master)
