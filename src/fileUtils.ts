@@ -29,17 +29,51 @@ export const saveArtifactToFile = async (artifact: Artifact): Promise<string> =>
   // Create the artifacts directory if it doesn't exist
   await fs.mkdir(config.savePath, { recursive: true });
   
-  // Generate a filename based on the artifact title or ID
-  const fileName = artifact.title 
-    ? sanitizeFileName(`${artifact.title}.${getExtensionForType(artifact.type, artifact.language)}`)
-    : sanitizeFileName(`artifact-${artifact.id}.${getExtensionForType(artifact.type, artifact.language)}`);
+  // Extract directory structure and filename from the title if available
+  let outputPath: string;
   
-  const filePath = path.join(config.savePath, fileName);
+  if (artifact.title) {
+    // Get file extension based on artifact type
+    const extension = getExtensionForType(artifact.type, artifact.language);
+    
+    // Check if title has directory structure (contains '/')
+    if (artifact.title.includes('/')) {
+      // Extract directory parts and filename
+      const parts = artifact.title.split('/');
+      const fileName = parts.pop() || `artifact-${artifact.id}`;
+      const dirStructure = parts.join('/');
+      
+      // Create full directory path
+      const dirPath = path.join(config.savePath, dirStructure);
+      
+      // Create nested directories
+      await fs.mkdir(dirPath, { recursive: true });
+      
+      // Set full output path with proper extension (avoid double extension)
+      if (fileName.endsWith(`.${extension}`)) {
+        outputPath = path.join(dirPath, sanitizeFileName(fileName));
+      } else {
+        outputPath = path.join(dirPath, sanitizeFileName(`${fileName}.${extension}`));
+      }
+    } else {
+      // No directory structure in title, just use filename
+      outputPath = path.join(
+        config.savePath, 
+        sanitizeFileName(`${artifact.title}.${extension}`)
+      );
+    }
+  } else {
+    // Fallback to ID-based naming if no title
+    outputPath = path.join(
+      config.savePath, 
+      sanitizeFileName(`artifact-${artifact.id}.${getExtensionForType(artifact.type, artifact.language)}`)
+    );
+  }
   
   // Write the artifact content to the file
-  await fs.writeFile(filePath, artifact.content);
+  await fs.writeFile(outputPath, artifact.content);
   
-  return filePath;
+  return outputPath;
 };
 
 // Get appropriate file extension based on artifact type
@@ -93,16 +127,42 @@ function getCodeExtension(language: string): string {
   return extensions[language.toLowerCase()] || 'txt';
 }
 
-// Sanitize filename to avoid invalid characters
+// Sanitize filename to avoid invalid characters but preserve path separators
 function sanitizeFileName(fileName: string): string {
-  return fileName.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
+  // Don't replace path separators, but sanitize everything else
+  return fileName.replace(/[<>:"\\|?*\x00-\x1F]/g, '_');
 }
 
-// List all saved artifacts
+// List all saved artifacts recursively
 export const listSavedArtifacts = async (): Promise<string[]> => {
+  const results: string[] = [];
+
+  // Recursive function to list files in directory and subdirectories
+  async function listFilesRecursively(currentPath: string, relativePath: string = ''): Promise<void> {
+    try {
+      const entries = await fs.readdir(currentPath, { withFileTypes: true });
+      
+      for (const entry of entries) {
+        const entryPath = path.join(currentPath, entry.name);
+        const entryRelativePath = path.join(relativePath, entry.name);
+        
+        if (entry.isDirectory()) {
+          // Recursively process subdirectories
+          await listFilesRecursively(entryPath, entryRelativePath);
+        } else {
+          // Add file to results with its relative path
+          results.push(entryRelativePath);
+        }
+      }
+    } catch (error) {
+      // Skip directories that can't be read
+      console.error(`Error reading directory ${currentPath}: ${error}`);
+    }
+  }
+
   try {
-    const files = await fs.readdir(config.savePath);
-    return files;
+    await listFilesRecursively(config.savePath);
+    return results;
   } catch (error) {
     // If directory doesn't exist yet, return empty array
     return [];
