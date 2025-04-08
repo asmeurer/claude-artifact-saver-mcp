@@ -166,7 +166,7 @@ export const listSavedArtifacts = async (): Promise<string[]> => {
   try {
     await listFilesRecursively(config.savePath);
     return results;
-  } catch (error) {
+  } catch {
     // If directory doesn't exist yet, return empty array
     return [];
   }
