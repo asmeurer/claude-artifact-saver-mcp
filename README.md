@@ -11,24 +11,44 @@ A Model Context Protocol (MCP) server that helps save content artifacts from Cla
 
 ## Installation
 
+1. Clone this repository and install dependencies:
+
 ```bash
+git clone https://github.com/your-username/claude-artifact-saver-mcp.git
+cd claude-artifact-saver-mcp
 npm install
 ```
 
-## Usage
-
-Start the MCP server in development mode:
-
-```bash
-npm run dev
-```
-
-Or build and run in production mode:
+2. Build the project:
 
 ```bash
 npm run build
-npm run start
 ```
+
+## MCP Integration
+
+To use this with the Model Context Protocol:
+
+1. Configure your `claude_desktop_config.json` file by adding:
+
+```json
+{
+  "servers": [
+    {
+      "name": "claude-artifact-saver",
+      "command": ["node", "/absolute/path/to/claude-artifact-saver-mcp/build/index.js"]
+    }
+  ]
+}
+```
+
+Replace `/absolute/path/to/claude-artifact-saver-mcp/build/index.js` with the absolute path to the built index.js file.
+
+2. Restart Claude to apply the changes
+
+## Usage
+
+Once integrated with Claude, you can use the following tools in your conversations:
 
 ### Available Tools
 
@@ -38,34 +58,13 @@ The MCP server provides the following tools for use with Claude:
 - **set-save-path**: Changes where artifacts are saved
 - **list-artifacts**: Shows all saved artifacts
 
-## Development
+## Troubleshooting
 
-### Scripts
+If you encounter issues:
 
-- `npm run build` - Build the project
-- `npm run dev` - Run in development mode with auto-reloading
-- `npm run start` - Start the server from built files
-- `npm run lint` - Run ESLint
-- `npm run lint:fix` - Run ESLint with automatic fixes
-- `npm run format` - Format code with Prettier
-- `npm run test` - Run tests
-
-### Pre-commit Hooks
-
-This project uses pre-commit to run quality checks before commits. These include:
-
-- TypeScript type checking
-- ESLint for code linting
-- Prettier for code formatting
-- Various file integrity checks (trailing whitespace, EOL, etc.)
-
-To manually run all pre-commit hooks:
-
-```bash
-pre-commit run --all-files
-```
-
-A GitHub Action is also configured to run these checks on pull requests.
+1. Make sure you've used an absolute path in the config file
+2. Verify Claude is configured to use MCP servers
+3. Check that the server is properly built with `npm run build`
 
 ## License
 
