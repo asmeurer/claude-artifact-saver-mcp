@@ -20,4 +20,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - File operations: Use fs/promises API with proper error handling
 
 ## MCP Integration
-- This is an MCP server. Use the guide at https://modelcontextprotocol.io/llms-full.txt for documentation on how to use MCP. It is written against the MCP Typescript SDK. Read from https://github.com/modelcontextprotocol/typescript-sdk for documentation on how to use the SDK.
+- This is an MCP server. Use the guide at
+  https://modelcontextprotocol.io/llms-full.txt for documentation on how to
+  use MCP. Always download and read this guide before updating the code.
+- It is written against the MCP Typescript SDK. Read from
+  https://github.com/modelcontextprotocol/typescript-sdk for documentation on
+  how to use the SDK.
