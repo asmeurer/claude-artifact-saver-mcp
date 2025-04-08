@@ -1,14 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import path from 'path';
 import fs from 'fs/promises';
-import { determineFileExtension, saveToFile, ensureDirectoryExists } from '../src/fileUtils.js';
-
-// Mock fs/promises
-vi.mock('fs/promises', () => ({
+// Set up the mocks before importing the module to be tested
+vi.doMock('fs/promises', () => ({
+  default: {},
   writeFile: vi.fn(),
   mkdir: vi.fn(),
   access: vi.fn(),
+  readdir: vi.fn(),
 }));
+
+// Import the functions we're testing after mocking
+import * as fileUtils from '../src/fileUtils.js';
 
 // Mock console.error
 vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -26,25 +29,25 @@ describe('fileUtils', () => {
     it('should return .js for JavaScript code', () => {
       const content = 'function test() { return true; }';
       const title = 'test';
-      expect(determineFileExtension(content, title)).toBe('.js');
+      expect(fileUtils.determineFileExtension(content, title)).toBe('.js');
     });
 
     it('should return .md for markdown content', () => {
       const content = '# Heading\n\nThis is markdown';
       const title = 'test';
-      expect(determineFileExtension(content, title)).toBe('.md');
+      expect(fileUtils.determineFileExtension(content, title)).toBe('.md');
     });
 
     it('should use extension from title if available', () => {
       const content = 'const test = true;';
       const title = 'test.ts';
-      expect(determineFileExtension(content, title)).toBe('.ts');
+      expect(fileUtils.determineFileExtension(content, title)).toBe('.ts');
     });
 
     it('should return .txt for unknown content types', () => {
       const content = 'Plain text without clear indicators';
       const title = 'test';
-      expect(determineFileExtension(content, title)).toBe('.txt');
+      expect(fileUtils.determineFileExtension(content, title)).toBe('.txt');
     });
   });
 
@@ -53,7 +56,7 @@ describe('fileUtils', () => {
       // Mock fs.access to throw, simulating directory not found
       vi.mocked(fs.access).mockRejectedValueOnce(new Error('not found'));
       
-      await ensureDirectoryExists('/path/to/dir');
+      await fileUtils.ensureDirectoryExists('/path/to/dir');
       
       expect(fs.mkdir).toHaveBeenCalledWith('/path/to/dir', { recursive: true });
     });
@@ -62,7 +65,7 @@ describe('fileUtils', () => {
       // Mock fs.access to resolve, simulating directory exists
       vi.mocked(fs.access).mockResolvedValueOnce(undefined);
       
-      await ensureDirectoryExists('/path/to/dir');
+      await fileUtils.ensureDirectoryExists('/path/to/dir');
       
       expect(fs.mkdir).not.toHaveBeenCalled();
     });
@@ -71,7 +74,7 @@ describe('fileUtils', () => {
       const error = new Error('unexpected error');
       vi.mocked(fs.access).mockRejectedValueOnce(error);
       
-      await ensureDirectoryExists('/path/to/dir');
+      await fileUtils.ensureDirectoryExists('/path/to/dir');
       
       expect(console.error).toHaveBeenCalledWith('Error checking directory:', error);
       expect(fs.mkdir).toHaveBeenCalledWith('/path/to/dir', { recursive: true });
@@ -92,7 +95,7 @@ describe('fileUtils', () => {
       const content = 'Test content';
       const filePath = '/path/to/file.txt';
       
-      await saveToFile(content, filePath);
+      await fileUtils.saveToFile(content, filePath);
       
       expect(fs.writeFile).toHaveBeenCalledWith(filePath, content);
     });
@@ -104,7 +107,7 @@ describe('fileUtils', () => {
       const content = 'Test content';
       const filePath = '/path/to/file.txt';
       
-      await saveToFile(content, filePath);
+      await fileUtils.saveToFile(content, filePath);
       
       expect(console.error).toHaveBeenCalledWith('Error saving file:', error);
     });

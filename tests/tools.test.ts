@@ -16,13 +16,14 @@ describe('MCP Tools', () => {
   let tools: Record<string, ToolDefinition>;
   let mockSavePath: string;
   let mockSavedArtifacts: string[];
+  let fileUtils: any;
   
-  beforeEach(() => {
+  beforeEach(async () => {
     mockSavePath = '/default/save/path';
     mockSavedArtifacts = [];
     
     // Import the fileUtils module to access the mocked functions
-    const fileUtils = require('../src/fileUtils.js');
+    fileUtils = await import('../src/fileUtils.js');
     
     // Create simplified versions of the tools for testing
     tools = {
@@ -69,7 +70,7 @@ describe('MCP Tools', () => {
 
   describe('save-artifact tool', () => {
     it('should save content with the correct file path', async () => {
-      const fileUtils = require('../src/fileUtils.js');
+      // Use fileUtils from top-level
       const title = 'test-file';
       const content = 'Test content';
       
@@ -88,7 +89,7 @@ describe('MCP Tools', () => {
     });
     
     it('should use existing extension if title has one', async () => {
-      const fileUtils = require('../src/fileUtils.js');
+      // Use fileUtils from top-level
       const title = 'test-file.md';
       const content = 'Test content';
       

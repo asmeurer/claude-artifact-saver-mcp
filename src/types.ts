@@ -12,3 +12,12 @@ export interface Artifact {
 export interface Config {
   savePath: string;
 }
+
+// MCP Tool Definition
+export interface ToolDefinition {
+  description: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  parameters: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  handler: (params: any) => Promise<any>;
+}
