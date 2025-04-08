@@ -1,6 +1,13 @@
 import { describe, test, expect, beforeEach, vi, afterEach } from 'vitest';
-import { saveArtifactToFile, updateSavePath, listSavedArtifacts, getConfig } from '../src/fileUtils.js';
+import {
+  saveArtifactToFile,
+  updateSavePath,
+  listSavedArtifacts,
+  getConfig,
+} from '../src/fileUtils.js';
 import fs from 'fs/promises';
+// path is used in mocks
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import path from 'path';
 import { Artifact } from '../src/types.js';
 
@@ -36,10 +43,10 @@ describe('fileUtils', () => {
     test('should update the save path and create directory if needed', async () => {
       const newPath = 'test-artifacts';
       await updateSavePath(newPath);
-      
+
       // Check if it tries to create the directory
       expect(fs.mkdir).toHaveBeenCalledWith('/absolute/test-artifacts', { recursive: true });
-      
+
       // Check if config is updated
       const config = getConfig();
       expect(config.savePath).toBe('/absolute/test-artifacts');
@@ -47,7 +54,7 @@ describe('fileUtils', () => {
 
     test('should throw error if mkdir fails', async () => {
       vi.mocked(fs.mkdir).mockRejectedValueOnce(new Error('Permission denied'));
-      
+
       await expect(updateSavePath('test-path')).rejects.toThrow('Failed to set save path');
     });
   });
@@ -63,7 +70,7 @@ describe('fileUtils', () => {
       };
 
       const filePath = await saveArtifactToFile(artifact);
-      
+
       expect(fs.mkdir).toHaveBeenCalledWith(expect.any(String), { recursive: true });
       expect(fs.writeFile).toHaveBeenCalledWith(expect.any(String), 'test content');
       expect(filePath).toContain('test-title.md');
@@ -80,10 +87,13 @@ describe('fileUtils', () => {
       };
 
       const filePath = await saveArtifactToFile(artifact);
-      
+
       // Should create the nested directory
       expect(fs.mkdir).toHaveBeenCalledTimes(2);
-      expect(fs.writeFile).toHaveBeenCalledWith(expect.stringContaining('dir1/dir2/test-file.js'), 'test content');
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        expect.stringContaining('dir1/dir2/test-file.js'),
+        'test content',
+      );
       expect(filePath).toContain('dir1/dir2/test-file.js');
     });
 
@@ -96,8 +106,11 @@ describe('fileUtils', () => {
       };
 
       const filePath = await saveArtifactToFile(artifact);
-      
-      expect(fs.writeFile).toHaveBeenCalledWith(expect.stringContaining('artifact-test-id.html'), 'test content');
+
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        expect.stringContaining('artifact-test-id.html'),
+        'test content',
+      );
       expect(filePath).toContain('artifact-test-id.html');
     });
 
@@ -111,7 +124,7 @@ describe('fileUtils', () => {
 
       for (const { type, language, expectedExt } of testCases) {
         vi.clearAllMocks();
-        
+
         const artifact: Artifact = {
           id: 'test-id',
           title: `test-file-${type}`,
@@ -136,7 +149,7 @@ describe('fileUtils', () => {
       };
 
       const filePath = await saveArtifactToFile(artifact);
-      
+
       expect(filePath).toContain('test_file_with_invalid_chars_.txt');
       expect(filePath).not.toContain('?');
       expect(filePath).not.toContain('*');
@@ -151,28 +164,28 @@ describe('fileUtils', () => {
       vi.mocked(fs.readdir).mockImplementation((path) => {
         if (path === getConfig().savePath) {
           return Promise.resolve([
-            { name: 'file1.txt', isDirectory: () => false },
-            { name: 'dir1', isDirectory: () => true },
-          ] as any[]);
+            { name: 'file1.txt', isDirectory: (): boolean => false },
+            { name: 'dir1', isDirectory: (): boolean => true },
+          ] as unknown[]);
         } else if (path.toString().includes('dir1')) {
           return Promise.resolve([
-            { name: 'file2.txt', isDirectory: () => false },
-            { name: 'file3.md', isDirectory: () => false },
-          ] as any[]);
+            { name: 'file2.txt', isDirectory: (): boolean => false },
+            { name: 'file3.md', isDirectory: (): boolean => false },
+          ] as unknown[]);
         }
         return Promise.resolve([]);
       });
 
       const files = await listSavedArtifacts();
-      
+
       expect(files).toEqual(['/file1.txt', '/dir1/file2.txt', '/dir1/file3.md']);
     });
 
     test('should return empty array if directory does not exist', async () => {
       vi.mocked(fs.readdir).mockRejectedValueOnce(new Error('ENOENT: Directory not found'));
-      
+
       const files = await listSavedArtifacts();
-      
+
       expect(files).toEqual([]);
     });
 
@@ -180,22 +193,22 @@ describe('fileUtils', () => {
       vi.mocked(fs.readdir).mockImplementation((path) => {
         if (path === getConfig().savePath) {
           return Promise.resolve([
-            { name: 'file1.txt', isDirectory: () => false },
-            { name: 'dir1', isDirectory: () => true },
-            { name: 'dir2', isDirectory: () => true },
-          ] as any[]);
+            { name: 'file1.txt', isDirectory: (): boolean => false },
+            { name: 'dir1', isDirectory: (): boolean => true },
+            { name: 'dir2', isDirectory: (): boolean => true },
+          ] as unknown[]);
         } else if (path.toString().includes('dir1')) {
           return Promise.reject(new Error('Permission denied'));
         } else if (path.toString().includes('dir2')) {
           return Promise.resolve([
-            { name: 'file2.txt', isDirectory: () => false },
-          ] as any[]);
+            { name: 'file2.txt', isDirectory: (): boolean => false },
+          ] as unknown[]);
         }
         return Promise.resolve([]);
       });
 
       const files = await listSavedArtifacts();
-      
+
       // Should include files from root and dir2, but not dir1
       expect(files).toContain('/file1.txt');
       expect(files).toContain('/dir2/file2.txt');
@@ -207,11 +220,11 @@ describe('fileUtils', () => {
     test('should return a copy of the config', () => {
       const config1 = getConfig();
       const config2 = getConfig();
-      
+
       // Should be a deep copy, not the same object
       expect(config1).toEqual(config2);
       expect(config1).not.toBe(config2);
-      
+
       // Modifying one should not affect the other
       config1.savePath = 'new-path';
       expect(config2.savePath).not.toBe('new-path');

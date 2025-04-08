@@ -5,6 +5,7 @@ This document provides examples of how to use the Claude Artifact Saver MCP tool
 ## Setting Up
 
 1. Start the MCP server:
+
    ```bash
    npm run dev
    ```

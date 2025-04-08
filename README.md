@@ -52,7 +52,20 @@ The MCP server provides the following tools for use with Claude:
 
 ### Pre-commit Hooks
 
-This project uses Husky and lint-staged to run linting and formatting on staged files before commits.
+This project uses pre-commit to run quality checks before commits. These include:
+
+- TypeScript type checking
+- ESLint for code linting
+- Prettier for code formatting
+- Various file integrity checks (trailing whitespace, EOL, etc.)
+
+To manually run all pre-commit hooks:
+
+```bash
+pre-commit run --all-files
+```
+
+A GitHub Action is also configured to run these checks on pull requests.
 
 ## License
 

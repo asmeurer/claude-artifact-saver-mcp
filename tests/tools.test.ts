@@ -19,7 +19,7 @@ describe('MCP Tools', () => {
   });
 
   // Recreate the ListTools handler from index.ts
-  const listToolsHandler = async () => {
+  const listToolsHandler = async (): Promise<{ tools: unknown[] }> => {
     return {
       tools: [
         {
@@ -79,7 +79,9 @@ describe('MCP Tools', () => {
   };
 
   // Recreate the CallTool handler from index.ts
-  const callToolHandler = async (request: any) => {
+  const callToolHandler = async (request: {
+    params: { name: string; arguments: Record<string, unknown> };
+  }): Promise<{ content: Array<{ type: string; text: string }>; isError?: boolean }> => {
     const { name, arguments: args } = request.params;
 
     switch (name) {
@@ -198,12 +200,12 @@ describe('MCP Tools', () => {
   describe('ListTools Handler', () => {
     test('should return the list of available tools', async () => {
       const result = await listToolsHandler();
-      
+
       expect(result).toHaveProperty('tools');
       expect(result.tools).toHaveLength(3); // save-artifact, set-save-path, list-artifacts
-      
+
       // Check that each tool has the expected properties
-      const toolNames = result.tools.map((tool: any) => tool.name);
+      const toolNames = result.tools.map((tool: { name: string }) => tool.name);
       expect(toolNames).toContain('save-artifact');
       expect(toolNames).toContain('set-save-path');
       expect(toolNames).toContain('list-artifacts');
@@ -215,7 +217,7 @@ describe('MCP Tools', () => {
       // Setup mock for saveArtifactToFile
       const mockFilePath = '/path/to/saved/artifact.md';
       vi.mocked(fileUtils.saveArtifactToFile).mockResolvedValue(mockFilePath);
-      
+
       const result = await callToolHandler({
         params: {
           name: 'save-artifact',
@@ -227,14 +229,16 @@ describe('MCP Tools', () => {
           },
         },
       });
-      
-      expect(fileUtils.saveArtifactToFile).toHaveBeenCalledWith(expect.objectContaining({
-        id: 'test-id',
-        title: 'Test Title',
-        content: 'Test content',
-        type: 'text/markdown',
-      }));
-      
+
+      expect(fileUtils.saveArtifactToFile).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'test-id',
+          title: 'Test Title',
+          content: 'Test content',
+          type: 'text/markdown',
+        }),
+      );
+
       expect(result).toHaveProperty('content');
       expect(result.content[0].text).toContain('Successfully saved artifact');
       expect(result.content[0].text).toContain(mockFilePath);
@@ -243,7 +247,7 @@ describe('MCP Tools', () => {
     test('should handle save-artifact errors', async () => {
       // Setup mock to throw an error
       vi.mocked(fileUtils.saveArtifactToFile).mockRejectedValue(new Error('Save failed'));
-      
+
       const result = await callToolHandler({
         params: {
           name: 'save-artifact',
@@ -254,7 +258,7 @@ describe('MCP Tools', () => {
           },
         },
       });
-      
+
       expect(result).toHaveProperty('isError', true);
       expect(result.content[0].text).toContain('Error saving artifact');
     });
@@ -263,7 +267,7 @@ describe('MCP Tools', () => {
       // Setup mocks
       vi.mocked(fileUtils.updateSavePath).mockResolvedValue(undefined);
       vi.mocked(fileUtils.getConfig).mockReturnValue({ savePath: '/updated/path' });
-      
+
       const result = await callToolHandler({
         params: {
           name: 'set-save-path',
@@ -272,7 +276,7 @@ describe('MCP Tools', () => {
           },
         },
       });
-      
+
       expect(fileUtils.updateSavePath).toHaveBeenCalledWith('/updated/path');
       expect(result.content[0].text).toContain('Successfully set save path to /updated/path');
     });
@@ -280,7 +284,7 @@ describe('MCP Tools', () => {
     test('should handle set-save-path errors', async () => {
       // Setup mock to throw an error
       vi.mocked(fileUtils.updateSavePath).mockRejectedValue(new Error('Invalid path'));
-      
+
       const result = await callToolHandler({
         params: {
           name: 'set-save-path',
@@ -289,7 +293,7 @@ describe('MCP Tools', () => {
           },
         },
       });
-      
+
       expect(result).toHaveProperty('isError', true);
       expect(result.content[0].text).toContain('Error setting save path');
     });
@@ -298,14 +302,14 @@ describe('MCP Tools', () => {
       // Setup mocks for non-empty response
       vi.mocked(fileUtils.listSavedArtifacts).mockResolvedValue(['file1.md', 'dir/file2.js']);
       vi.mocked(fileUtils.getConfig).mockReturnValue({ savePath: '/artifacts/path' });
-      
+
       const result = await callToolHandler({
         params: {
           name: 'list-artifacts',
           arguments: {},
         },
       });
-      
+
       expect(result.content[0].text).toContain('Artifacts in /artifacts/path');
       expect(result.content[0].text).toContain('file1.md');
       expect(result.content[0].text).toContain('dir/file2.js');
@@ -315,28 +319,28 @@ describe('MCP Tools', () => {
       // Setup mocks for empty response
       vi.mocked(fileUtils.listSavedArtifacts).mockResolvedValue([]);
       vi.mocked(fileUtils.getConfig).mockReturnValue({ savePath: '/artifacts/path' });
-      
+
       const result = await callToolHandler({
         params: {
           name: 'list-artifacts',
           arguments: {},
         },
       });
-      
+
       expect(result.content[0].text).toContain('No artifacts found in /artifacts/path');
     });
 
     test('should handle list-artifacts errors', async () => {
       // Setup mock to throw an error
       vi.mocked(fileUtils.listSavedArtifacts).mockRejectedValue(new Error('List failed'));
-      
+
       const result = await callToolHandler({
         params: {
           name: 'list-artifacts',
           arguments: {},
         },
       });
-      
+
       expect(result).toHaveProperty('isError', true);
       expect(result.content[0].text).toContain('Error listing artifacts');
     });
@@ -348,7 +352,7 @@ describe('MCP Tools', () => {
           arguments: {},
         },
       });
-      
+
       expect(result).toHaveProperty('isError', true);
       expect(result.content[0].text).toContain('Unknown tool: non-existent-tool');
     });
